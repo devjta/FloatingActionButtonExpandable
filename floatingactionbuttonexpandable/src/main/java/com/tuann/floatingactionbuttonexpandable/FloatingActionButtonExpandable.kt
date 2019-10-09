@@ -4,6 +4,7 @@ import android.content.Context
 import android.graphics.Bitmap
 import android.graphics.Typeface
 import android.graphics.drawable.Drawable
+import android.os.Build
 import android.os.Parcel
 import android.os.Parcelable
 import android.support.v4.content.ContextCompat
@@ -40,7 +41,7 @@ class FloatingActionButtonExpandable @JvmOverloads constructor(
     private val buttonLayout: LinearLayout
     private val ivIcon: ImageView
     private val tvContent: TextView
-    private val toggle: Transition
+    private val toggle: Transition?
     private var duration = 0L
 
     init {
@@ -115,8 +116,13 @@ class FloatingActionButtonExpandable @JvmOverloads constructor(
             tvContent.typeface = it
         }
 
-        toggle = TransitionInflater.from(context)
-            .inflateTransition(R.transition.float_action_button_toggle)
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
+            toggle = TransitionInflater.from(context)
+                .inflateTransition(R.transition.float_action_button_toggle)
+        }
+        else{
+            toggle = null;
+        }
         setExpanded(expanded)
 
         calculateRadius()
@@ -206,9 +212,21 @@ class FloatingActionButtonExpandable @JvmOverloads constructor(
         execute(anim)
     }
 
+//    fun setAutoCollapse(duration: Int){
+//
+//    }
+//
+//    fun setAutoExpand(duration: Int){
+//
+//    }
+
     private fun execute(anim: Boolean = true) {
-        toggle.duration = if (anim) duration else 0
-        TransitionManager.beginDelayedTransition(root.parent as ViewGroup, toggle)
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
+            if (toggle != null) {
+                toggle.duration = if (anim) duration else 0
+                TransitionManager.beginDelayedTransition(root.parent as ViewGroup, toggle)
+            }
+        }
         tvContent.visibility = if (expanded) View.VISIBLE else View.GONE
         ivIcon.isActivated = expanded
         calculateRadius()

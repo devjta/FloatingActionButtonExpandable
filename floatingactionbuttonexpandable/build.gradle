@@ -1,9 +1,19 @@
 apply plugin: 'com.android.library'
 apply plugin: 'kotlin-android'
-apply plugin: 'maven'
-group = 'com.github.imtuann'
+apply plugin: 'maven-publish'
+//apply plugin: 'maven'
+
+
 
 android {
+
+    lintOptions {
+        checkReleaseBuilds false
+        // Or, if you prefer, you can continue to check for errors in release builds,
+        // but continue the build even when errors are found:
+        abortOnError false
+    }
+
     compileSdkVersion rootProject.COMPILE_SDK_VERSION
 
     defaultConfig {
@@ -31,4 +41,36 @@ dependencies {
 }
 repositories {
     mavenCentral()
+}
+
+
+afterEvaluate {
+    def propFile = file("${project.rootDir}/local.properties")
+    Properties props = new Properties()
+    props.load(new FileInputStream(propFile))
+
+    if(props['aws_username'] != null) {
+        publishing {
+            publications {
+                lib(MavenPublication) {
+                    groupId 'com.github.devjta'
+                    artifactId 'FloatingActionButtonExpandable'
+                    version 'eb7bfa9422'
+                    artifact(bundleReleaseAar)
+                }
+            }
+            repositories {
+                maven {
+                    url = props['aws_bucket']
+                    credentials(AwsCredentials) {
+                        accessKey = props['aws_username']
+                        secretKey = props['aws_password']
+                    }
+                }
+            }
+        }
+    }
+    else{
+        print "NOT PUBLISHING - ENV VARIABLES ARE MISSING"
+    }
 }
